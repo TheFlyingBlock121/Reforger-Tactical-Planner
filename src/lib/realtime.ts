@@ -28,18 +28,24 @@ type Events = {
   onDisconnected?: () => void;
 };
 
+function normalizeRelayUrl(value: string) {
+  return value.trim().replace(/^['"]|['"]$/g, "").replace(/\/+$/, "");
+}
+
 class PlannerRealtime {
   private socket: Socket | null = null;
   private roomCode = "";
   private currentPlayerName = "Player";
   private events: Events = {};
+  private connectionPromise: Promise<void> | null = null;
+  private lastConnectError = "";
 
   get activeRoom() {
     return this.roomCode;
   }
 
   get relayUrl() {
-    return import.meta.env.VITE_RELAY_URL || "http://127.0.0.1:8787";
+    return normalizeRelayUrl(import.meta.env.VITE_RELAY_URL || "http://127.0.0.1:8787");
   }
 
   configure(events: Events) {
@@ -49,18 +55,27 @@ class PlannerRealtime {
   private ensureSocket() {
     if (this.socket) return this.socket;
 
+    // Let Socket.IO start with HTTP polling and upgrade to WebSocket. This is
+    // more tolerant of sleeping cloud relays and reverse proxies than forcing
+    // WebSocket as the first transport.
     this.socket = io(this.relayUrl, {
-      transports: ["websocket", "polling"],
+      autoConnect: false,
+      transports: ["polling", "websocket"],
+      upgrade: true,
+      rememberUpgrade: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
-      reconnectionDelay: 500,
+      reconnectionDelay: 750,
       reconnectionDelayMax: 5000,
-      timeout: 30000
+      randomizationFactor: 0.35,
+      timeout: 15000
     });
 
     this.socket.on("connect", () => {
-      // Socket.IO reconnects the transport automatically, but room membership is
-      // server-side and must be re-established after a dropped connection.
+      this.lastConnectError = "";
+
+      // Socket.IO reconnects the transport automatically, but room membership
+      // is server-side and must be re-established after a dropped connection.
       if (!this.roomCode) return;
       this.socket?.timeout(30000).emit(
         "room:join",
@@ -82,6 +97,10 @@ class PlannerRealtime {
       );
     });
 
+    this.socket.on("connect_error", (error) => {
+      this.lastConnectError = error?.message || "Unknown connection error";
+    });
+
     this.socket.on("plan:map", (map: MapImage | null) => this.events.onMap?.(map));
     this.socket.on("plan:calibration", (calibration: MapCalibration) => this.events.onCalibration?.(calibration));
     this.socket.on("marker:add", (marker: TacticalMarker) => this.events.onMarkerAdd?.(marker));
@@ -96,11 +115,85 @@ class PlannerRealtime {
     return this.socket;
   }
 
-  private async emitWithAck<T>(event: string, payload: unknown): Promise<T> {
+  private async ensureConnected(timeoutMs = 45000) {
     const socket = this.ensureSocket();
+    if (socket.connected) return;
+    if (this.connectionPromise) return this.connectionPromise;
+
+    this.connectionPromise = new Promise<void>((resolve, reject) => {
+      let settled = false;
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        socket.off("connect", onConnect);
+      };
+
+      const onConnect = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        const detail = this.lastConnectError ? ` Last error: ${this.lastConnectError}.` : "";
+        reject(
+          new Error(
+            `Could not connect to relay ${this.relayUrl} within ${Math.round(timeoutMs / 1000)} seconds.${detail} ` +
+            `Open the relay URL in a browser and also test /socket.io/?EIO=4&transport=polling.`
+          )
+        );
+      }, timeoutMs);
+
+      socket.on("connect", onConnect);
+      socket.connect();
+    });
+
+    try {
+      await this.connectionPromise;
+    } finally {
+      this.connectionPromise = null;
+    }
+  }
+
+  async testRelay() {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`${this.relayUrl}/`, {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const body = await response.json().catch(() => null);
+      await this.ensureConnected(30000);
+      return {
+        ok: true,
+        message: body?.status === "ok" ? "Relay and Socket.IO connection are working." : "Relay responded and Socket.IO connected."
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error instanceof Error ? error.message : "Relay test failed."
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async emitWithAck<T>(event: string, payload: unknown): Promise<T> {
+    await this.ensureConnected(45000);
+    const socket = this.ensureSocket();
+
     return new Promise<T>((resolve, reject) => {
-      socket.timeout(60000).emit(event, payload, (error: Error | null, result: any) => {
-        if (error) return reject(new Error(`Relay did not answer in time (${this.relayUrl}). It may still be waking up.`));
+      socket.timeout(20000).emit(event, payload, (error: Error | null, result: any) => {
+        if (error) {
+          return reject(new Error(`Relay connected, but did not answer '${event}' in time (${this.relayUrl}).`));
+        }
         if (!result?.ok) return reject(new Error(result?.error || "Relay request failed."));
         resolve(result as T);
       });

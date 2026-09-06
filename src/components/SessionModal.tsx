@@ -13,6 +13,16 @@ export function SessionModal({ mode, onClose }: Props) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [relayTest, setRelayTest] = useState("");
+  const [testingRelay, setTestingRelay] = useState(false);
+
+  async function testRelay() {
+    setRelayTest("");
+    setTestingRelay(true);
+    const result = await plannerRealtime.testRelay();
+    setRelayTest(result.ok ? `OK: ${result.message}` : `FAILED: ${result.message}`);
+    setTestingRelay(false);
+  }
 
   async function submit() {
     setError("");
@@ -87,6 +97,11 @@ export function SessionModal({ mode, onClose }: Props) {
 
         <div className="small-note">
           Uses the cloud relay built into this release. Friends only need the room code; no router port forwarding is required.
+          <div style={{ marginTop: 8, wordBreak: "break-all" }}>Relay: {plannerRealtime.relayUrl}</div>
+          <button className="ghost-button" style={{ marginTop: 8 }} disabled={testingRelay || busy} onClick={testRelay}>
+            {testingRelay ? "TESTING RELAY…" : "TEST RELAY"}
+          </button>
+          {relayTest && <div style={{ marginTop: 6 }}>{relayTest}</div>}
         </div>
       </div>
     </div>

@@ -1,16 +1,23 @@
 import express from "express";
+import cors from "cors";
 import http from "node:http";
 import { Server } from "socket.io";
 
 const PORT = Number(process.env.PORT || 8787);
 
 const app = express();
+app.use(cors({ origin: "*" }));
+
 app.get("/", (_req, res) => {
   res.json({
     service: "Reforger Tactical Planner Relay",
     status: "ok",
     rooms: rooms.size
   });
+});
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", socketPath: "/socket.io/" });
 });
 
 const server = http.createServer(app);

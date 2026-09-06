@@ -28,7 +28,7 @@ function Validate-RelayUrl([string]$Value) {
 }
 
 Write-Host "========================================================" -ForegroundColor DarkGreen
-Write-Host " Reforger Tactical Planner v0.7 - WINDOWS INSTALLER " -ForegroundColor Green
+Write-Host " Reforger Tactical Planner v0.7.2 - WINDOWS INSTALLER " -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor DarkGreen
 Write-Host ""
 Write-Host "This creates ONE Setup.exe containing Everon, Serhiivka and automatic map LOD." -ForegroundColor Cyan
@@ -67,7 +67,10 @@ while (-not (Validate-RelayUrl $RelayUrl)) {
         throw "A public HTTPS relay URL is required for a shareable installer. See RELAY-SETUP.md."
     }
 }
-Set-Content -Path (Join-Path $ProjectRoot ".env.production.local") -Value "VITE_RELAY_URL=$RelayUrl" -Encoding UTF8
+$RelayUrl = $RelayUrl.Trim().Trim('"').Trim("'").TrimEnd('/')
+$envPath = Join-Path $ProjectRoot ".env.production.local"
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($envPath, "VITE_RELAY_URL=$RelayUrl`n", $utf8NoBom)
 Write-Host "Relay saved for this build: $RelayUrl" -ForegroundColor Green
 
 Write-Host ""
