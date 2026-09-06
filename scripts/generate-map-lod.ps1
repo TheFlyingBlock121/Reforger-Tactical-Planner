@@ -15,6 +15,12 @@ function Get-DirectoryBytes([string]$Path) {
     return [int64]$sum
 }
 
+function Write-JsonUtf8NoBom($Value, [string]$Path, [int]$Depth = 8) {
+    $json = $Value | ConvertTo-Json -Depth $Depth
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $json + [Environment]::NewLine, $utf8NoBom)
+}
+
 function New-LodTile(
     [string]$SourceDir,
     [string]$Destination,
@@ -90,7 +96,7 @@ function Build-MapLod([string]$Id, [string]$Folder) {
             $old = Get-Content $infoPath -Raw | ConvertFrom-Json
             if ($old.fingerprint -eq $fingerprint -and [int]$old.lodLevels -gt 0) {
                 $manifest | Add-Member -NotePropertyName lodLevels -NotePropertyValue ([int]$old.lodLevels) -Force
-                $manifest | ConvertTo-Json -Depth 8 | Set-Content $manifestPath -Encoding UTF8
+                Write-JsonUtf8NoBom $manifest $manifestPath 8
                 Write-Host "[$Folder] LOD is already current ($($old.lodLevels) levels)." -ForegroundColor DarkGray
                 return
             }
@@ -144,13 +150,13 @@ function Build-MapLod([string]$Id, [string]$Folder) {
         generatedBytes = $bytes
         generatedAt = (Get-Date).ToString("o")
     }
-    $info | ConvertTo-Json | Set-Content $infoPath -Encoding UTF8
+    Write-JsonUtf8NoBom $info $infoPath 4
 
     $manifest | Add-Member -NotePropertyName lodLevels -NotePropertyValue $lod -Force
     $manifest | Add-Member -NotePropertyName lodFormat -NotePropertyValue "jpg" -Force
     $manifest | Add-Member -NotePropertyName lodGeneratedBytes -NotePropertyValue $bytes -Force
     $manifest | Add-Member -NotePropertyName lodGeneratedAt -NotePropertyValue ((Get-Date).ToString("o")) -Force
-    $manifest | ConvertTo-Json -Depth 8 | Set-Content $manifestPath -Encoding UTF8
+    Write-JsonUtf8NoBom $manifest $manifestPath 8
     Write-Host "  Done: $lod LOD levels." -ForegroundColor Green
 }
 

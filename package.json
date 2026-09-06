@@ -1,6 +1,6 @@
 {
   "name": "reforger-tactical-planner",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Windows-first collaborative map planning companion for fictional Arma Reforger gameplay.",
   "main": "electron/main.cjs",
@@ -121,8 +121,5 @@
         ]
       }
     ]
-  },
-  "allowScripts": {
-    "electron-winstaller@5.4.0": true
   }
 }

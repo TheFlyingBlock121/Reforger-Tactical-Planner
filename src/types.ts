@@ -86,6 +86,7 @@ export type TileMapManifest = {
   firstTile?: string;
   lodLevels?: number;
   issue?: string;
+  warning?: string;
 };
 
 export type CalibrationPresetId = "unknown" | "everon" | "serhiivka" | "custom";

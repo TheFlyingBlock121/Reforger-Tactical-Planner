@@ -1,12 +1,23 @@
 {
-  "id": "everon",
-  "name": "Everon / Eden",
-  "builtIn": true,
-  "widthMeters": 12800,
-  "heightMeters": 12800,
-  "gridMeters": 1000,
-  "tilePattern": "tile_r###_c###.png",
-  "origin": "top-left",
-  "rowDirection": "down",
-  "columnDirection": "right"
+    "id":  "everon",
+    "name":  "Everon / Eden",
+    "builtIn":  true,
+    "widthMeters":  12800,
+    "heightMeters":  12800,
+    "gridMeters":  1000,
+    "tilePattern":  "tile_r###_c###.png",
+    "origin":  "top-left",
+    "rowDirection":  "down",
+    "columnDirection":  "right",
+    "detected":  {
+                     "rows":  26,
+                     "columns":  26,
+                     "tileWidth":  1440,
+                     "tileHeight":  1440,
+                     "tileCount":  676,
+                     "widthPixels":  37440,
+                     "heightPixels":  37440,
+                     "sourceBytes":  586012195
+                 },
+    "lodLevels":  5
 }

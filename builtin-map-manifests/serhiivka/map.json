@@ -1,12 +1,23 @@
 {
-  "id": "serhiivka",
-  "name": "Serhiivka",
-  "builtIn": true,
-  "widthMeters": 10240,
-  "heightMeters": 10240,
-  "gridMeters": 1000,
-  "tilePattern": "tile_r###_c###.png",
-  "origin": "top-left",
-  "rowDirection": "down",
-  "columnDirection": "right"
+    "id":  "serhiivka",
+    "name":  "Serhiivka",
+    "builtIn":  true,
+    "widthMeters":  10240,
+    "heightMeters":  10240,
+    "gridMeters":  1000,
+    "tilePattern":  "tile_r###_c###.png",
+    "origin":  "top-left",
+    "rowDirection":  "down",
+    "columnDirection":  "right",
+    "detected":  {
+                     "rows":  21,
+                     "columns":  21,
+                     "tileWidth":  1440,
+                     "tileHeight":  1440,
+                     "tileCount":  441,
+                     "widthPixels":  30240,
+                     "heightPixels":  30240,
+                     "sourceBytes":  771216991
+                 },
+    "lodLevels":  5
 }

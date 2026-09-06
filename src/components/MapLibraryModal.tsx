@@ -137,6 +137,7 @@ function MapCard({ pack, onLoad }: { pack: TileMapManifest; onLoad(pack: TileMap
         <div className="map-pack-metrics"><span>No matching tile PNGs found yet.</span></div>
       )}
 
+      {pack.warning && <div className="map-pack-warning">{pack.warning}</div>}
       {pack.issue && <div className="map-pack-issue">{pack.issue}</div>}
     </button>
   );

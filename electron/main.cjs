@@ -196,18 +196,55 @@ function inferredMapConfig(packDir) {
   return null;
 }
 
+function parsePlannerJson(raw) {
+  let text = String(raw ?? "").replace(/^\uFEFF/, "").trim();
+  if (!text) throw new Error("file is empty");
+
+  const attempts = [text];
+  if (text.startsWith('"') && text.endsWith('"') && text.length > 2) {
+    const unwrapped = text.slice(1, -1).trim();
+    attempts.push(unwrapped);
+    attempts.push(unwrapped.replace(/""/g, '"'));
+  }
+
+  let lastError = null;
+  for (const candidate of attempts) {
+    try {
+      let parsed = JSON.parse(candidate);
+      // Recover from a JSON file that was accidentally written as a JSON string.
+      if (typeof parsed === "string") {
+        const nested = parsed.replace(/^\uFEFF/, "").trim();
+        parsed = JSON.parse(nested);
+      }
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("map.json root must be an object");
+      }
+      return parsed;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("could not parse JSON");
+}
+
 async function scanPack(packDir, rootInfo) {
   const inferred = inferredMapConfig(packDir);
   let config = inferred || {};
+  let manifestWarning = "";
   const inferredId = String(config.id || path.basename(packDir)).toLowerCase();
   const configPath = rootInfo.directTiles && inferred
     ? path.join(__dirname, "..", "builtin-map-manifests", inferredId, "map.json")
     : path.join(packDir, "map.json");
   if (await exists(configPath)) {
     try {
-      config = { ...config, ...JSON.parse(await fs.readFile(configPath, "utf8")) };
+      config = { ...config, ...parsePlannerJson(await fs.readFile(configPath, "utf8")) };
     } catch (error) {
-      throw new Error(`Invalid map.json: ${error instanceof Error ? error.message : "parse error"}`);
+      const message = `Invalid map.json: ${error instanceof Error ? error.message : "parse error"}`;
+      // Built-in maps have trusted dimensions inferred from their folder names, so a
+      // damaged generated manifest must not make an otherwise valid map unusable.
+      if (inferred) manifestWarning = `${message}. Built-in defaults are being used.`;
+      else throw new Error(message);
     }
   }
 
@@ -235,7 +272,8 @@ async function scanPack(packDir, rootInfo) {
     tileHeight: 0,
     widthPixels: 0,
     heightPixels: 0,
-    lodLevels: Number(config.lodLevels || 0)
+    lodLevels: Number(config.lodLevels || 0),
+    warning: manifestWarning || undefined
   };
 
   if (!(await exists(tilesDir))) {
