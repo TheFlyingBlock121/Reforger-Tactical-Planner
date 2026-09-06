@@ -1,0 +1,128 @@
+{
+  "name": "reforger-tactical-planner",
+  "version": "0.7.0",
+  "private": true,
+  "description": "Windows-first collaborative map planning companion for fictional Arma Reforger gameplay.",
+  "main": "electron/main.cjs",
+  "author": "Reforger Tactical Planner",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k -n WEB,ELECTRON \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "build:web": "tsc -b && vite build",
+    "relay": "npm --prefix relay start",
+    "setup": "npm install && npm --prefix relay install",
+    "maps:check": "node scripts/validate-drop-maps.mjs",
+    "maps:lod": "powershell -ExecutionPolicy Bypass -File .\\scripts\\generate-map-lod.ps1",
+    "build": "npm run build:installer",
+    "build:installer": "powershell -ExecutionPolicy Bypass -File .\\scripts\\build-installer.ps1",
+    "build:installer:raw": "node scripts/validate-drop-maps.mjs --write-manifests && npm run maps:lod && npm run build:web && electron-builder --win nsis --x64 --config.directories.output=release-installer"
+  },
+  "dependencies": {
+    "milsymbol": "^3.0.4",
+    "ol": "^10.10.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "socket.io-client": "^4.8.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.0.0",
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.0",
+    "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "com.reforgerplanner.app",
+    "productName": "Reforger Tactical Planner",
+    "directories": {
+      "output": "release-installer"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Reforger-Tactical-Planner-${version}-${arch}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Reforger Tactical Planner",
+      "preCompressedFileExtensions": [
+        "png",
+        "jpg",
+        "jpeg"
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "BUILT_IN_MAP_TILES/Everon",
+        "to": "maps/everon/tiles",
+        "filter": [
+          "tile_r*_c*.png"
+        ]
+      },
+      {
+        "from": "BUILT_IN_MAP_TILES/Serhiivka",
+        "to": "maps/serhiivka/tiles",
+        "filter": [
+          "tile_r*_c*.png"
+        ]
+      },
+      {
+        "from": "generated-map-lod/everon",
+        "to": "maps/everon/lod",
+        "filter": [
+          "**/*.jpg"
+        ]
+      },
+      {
+        "from": "generated-map-lod/serhiivka",
+        "to": "maps/serhiivka/lod",
+        "filter": [
+          "**/*.jpg"
+        ]
+      },
+      {
+        "from": "builtin-map-manifests/everon",
+        "to": "maps/everon",
+        "filter": [
+          "map.json"
+        ]
+      },
+      {
+        "from": "builtin-map-manifests/serhiivka",
+        "to": "maps/serhiivka",
+        "filter": [
+          "map.json"
+        ]
+      }
+    ]
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true
+  }
+}

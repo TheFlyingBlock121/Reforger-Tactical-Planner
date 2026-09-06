@@ -1,0 +1,24 @@
+node_modules
+dist
+release
+release-build
+release-share
+release-installer
+.env
+relay/node_modules
+relay/.env
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Keep the two drop folders and their instructions in source control,
+# but don't accidentally commit hundreds of MB of map tiles.
+BUILT_IN_MAP_TILES/Everon/*.png
+BUILT_IN_MAP_TILES/Serhiivka/*.png
+
+# Optional custom maps are local data too.
+custom-maps/*/tiles/*.png
+.env.production.local
+generated-map-lod/
+release-installer/

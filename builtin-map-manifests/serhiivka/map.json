@@ -1,0 +1,12 @@
+{
+  "id": "serhiivka",
+  "name": "Serhiivka",
+  "builtIn": true,
+  "widthMeters": 10240,
+  "heightMeters": 10240,
+  "gridMeters": 1000,
+  "tilePattern": "tile_r###_c###.png",
+  "origin": "top-left",
+  "rowDirection": "down",
+  "columnDirection": "right"
+}

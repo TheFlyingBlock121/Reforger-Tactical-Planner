@@ -1,0 +1,12 @@
+DROP THE EVERON PNG TILES DIRECTLY INTO THIS FOLDER.
+
+Expected naming:
+  tile_r000_c000.png  = TOP LEFT
+  tile_r000_c001.png  = one tile to the RIGHT
+  tile_r001_c000.png  = one tile DOWN
+
+Rows increase TOP -> BOTTOM.
+Columns increase LEFT -> RIGHT.
+
+Do not rename or stitch the tiles.
+The build script detects the grid size and tile resolution automatically.

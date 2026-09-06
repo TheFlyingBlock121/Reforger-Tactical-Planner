@@ -1,0 +1,73 @@
+REFORGER TACTICAL PLANNER v0.7 - START HERE
+===========================================
+
+WHAT YOU DO
+-----------
+1. Put the Everon tile PNG files directly in:
+   BUILT_IN_MAP_TILES\Everon\
+
+2. Put the Serhiivka tile PNG files directly in:
+   BUILT_IN_MAP_TILES\Serhiivka\
+
+   Naming must look like:
+   tile_r000_c000.png
+   tile_r000_c001.png
+   tile_r001_c000.png
+   ...
+
+   r000/c000 = TOP LEFT
+   rows increase DOWN
+   columns increase RIGHT
+
+3. Put the SOURCE CODE on GitHub. The .gitignore intentionally prevents the
+   huge map PNGs from being committed.
+
+4. Deploy the tiny relay from that GitHub repo using Render.
+   See: RELAY-SETUP.md
+
+5. Copy the relay's HTTPS address.
+
+6. Double-click:
+   BUILD-INSTALLER-WINDOWS.bat
+
+7. On the first build, paste the relay URL when asked.
+
+8. Wait while v0.7:
+   - validates every source map tile
+   - installs dependencies if needed
+   - creates automatic low-resolution map LOD cache tiles
+   - type-checks/builds the app
+   - packs both maps into the installed app
+   - creates a normal Windows Setup.exe
+
+9. Your finished installer appears in:
+   release-installer\
+
+10. Upload the *-Setup.exe file to a GitHub Release.
+    Do NOT commit the installer or the map PNGs into the normal repository.
+
+FRIEND INSTALLATION
+-------------------
+Your friend downloads the Setup.exe, runs it, chooses an install folder if
+wanted, then launches Reforger Tactical Planner from the desktop/Start menu.
+Everon and Serhiivka are already included. No Node.js is needed on their PC.
+
+MULTIPLAYER
+-----------
+HOST creates a 6-character room code. JOIN enters it.
+Internet multiplayer uses the public relay, so neither player needs router
+port forwarding.
+
+DRAWING QOL
+-----------
+Right-click  = finish the current line/arrow/route/area
+Escape       = cancel the current in-progress drawing
+Double-click = OpenLayers' normal finish gesture still works
+Text tool    = click map -> type -> Enter/Add; Shift+Enter new line; Esc/right-click cancels
+
+OVERLAY QOL
+-----------
+Ctrl+Shift+S = narrow SIDE mode on the right edge of the monitor
+Ctrl+Shift+O = emergency click-through toggle
+Ctrl+S       = save plan
+Ctrl+O       = load plan
